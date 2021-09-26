@@ -1,2 +1,2 @@
-# Resolucao Atividade Sem7
- Resolução da Atividade da Semana 7 da disciplina Análise de Dados.
+# Resolução da Atividade da Semana 7
+ Resolução da Atividade da Semana 7 da Disciplina Análise de Dados MATD40.
