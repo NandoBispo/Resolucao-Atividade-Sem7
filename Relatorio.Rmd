@@ -1,0 +1,37 @@
+---
+title: "Relatório Atividade Semana 7"
+author: "Fernando Bispo"
+date: "26/09/2021"
+output: html_document
+---
+
+# Introdução
+O objetivo deste relatório é a da resolução
+
+# Questão 1
+O conjunto de dados **dados1** contém os dados acerca do tempo de permanência dos clientes da companhia aérea na chamada de telefone e o tipo de áudio utilizado no momento em que os clientes aguardam atendimento.
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
