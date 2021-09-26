@@ -2,36 +2,197 @@
 title: "Relatório Atividade Semana 7"
 author: "Fernando Bispo"
 date: "26/09/2021"
-output: html_document
+output: 
+  html_document:
+    code_folding: hide
+    html_document: null
+    highlight: textmate
+    theme: flatly
+    number_sections: yes
+    toc: yes
+    toc_float:
+      collapsed: yes
+      smooth_scroll: no
 ---
 
-# Introdução
-O objetivo deste relatório é a da resolução
+```{r, include=FALSE}
+if(!require(tidyverse)) install.packages("tidyverse")
+library(tidyverse)
+if(!require(RVAideMemoire)) install.packages("RVAideMemoire") 
+library(RVAideMemoire)
+if(!require(car)) install.packages("car")   
+library(car)
+if(!require(psych)) install.packages("psych")
+library(psych) 
+if(!require(rstatix)) install.packages("rstatix") 
+library(rstatix)
+if(!require(DescTools)) install.packages("DescTools")
+library(DescTools)
+library(patchwork)
+library(knitr)
+library(kableExtra)
 
-# Questão 1
-O conjunto de dados **dados1** contém os dados acerca do tempo de permanência dos clientes da companhia aérea na chamada de telefone e o tipo de áudio utilizado no momento em que os clientes aguardam atendimento.
+library(janitor)
+library(xtable)
 
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+dados <- read.csv2("Dados/dados1.csv")
 ```
 
-## R Markdown
+# Primeira Questão
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+## Introdução
+O conjunto de dados (**dados1**) contém as observações acerca do tempo de permanência na chamada telefônica dos clientes da companhia aérea e o tipo de áudio utilizado no momento em que os clientes aguardam atendimento, sendo estas variáveis quantitativa e qualitativa respectivamente.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+O intuito é comparar a distribuição do tempo de espera dos clientes com os diferentes tipos de áudio, sendo estes: um anúncio sobre a companhia aérea e suas promoções atuais, música de elevador ou música clássica gravada. 
 
-```{r cars}
-summary(cars)
+Para tanto será utilizado o teste de hipótese de Análise de Variância de um fator, abreviadamente denominado **ANOVA** pois se faz necessário a comparação entre as variáveis, sendo estas compostas por mais de 2 classes.
+
+## Análise Descritiva
+Antes de se iniciar a análise inferencial é necessário fazer uma análise descritiva a fim de se gerar uma interpretação preliminar.
+Analisando o BoxPlot (Figura 1a) é possível identificar um comportamento assimétrico entre as categorias de tipos de áudio.
+Os clientes que escutaram Música Clássica aguardaram por mais tempo até o atendimento, quando comparado aos clientes que aguardaram ouvindo os outros tipos de áudio. É possível identificar que há uma maior intercessão entre os BoxPlots dos indivíduos que escutaram o Anúncio e os que escutaram Música de Elevador, indicando que não há diferenciação entre esses indivíduos quanto ao tempo esperado.
+
+Analisando a densidade (Figura 1b) é constatado uma maior dispersão entre os indivíduos do grupo que ouviram o Anúncio, além de uma pequena assimetria positiva. Entre os indivíduos do grupo que ouviram Música de Elevador há uma assimetria positiva e uma assimetria negativa entre os indivíduos que ouviram Música Clássica.
+
+```{r, echo=FALSE}
+p1 <- 
+  dados %>% 
+    mutate(gravacao = as_factor(gravacao)) %>% 
+    group_by(gravacao) %>% 
+    ggplot(
+      aes(
+        x = gravacao, y = tempo ,fill = gravacao)) +
+    geom_boxplot() +
+      scale_x_discrete(
+        labels = c("Anúncio","M. de Elevador", "M. Clássica")) +
+      scale_fill_discrete( # Modifica o rótulo da legenda
+        labels = c("Anúncio","M. de Elevador", "M. Clássica")) +
+      labs(x = "", y = "Tempo (min)", fill="",title = "a) BoxPlot") +
+      theme_bw()+ 
+      theme(legend.position = "bottom")
+
+p2 <-  
+  dados %>% 
+    mutate(gravacao = as_factor(gravacao)) %>% 
+    group_by(gravacao) %>% 
+    ggplot(
+      aes(x = tempo,fill = gravacao)) +
+    geom_density(alpha = 0.4) +
+    # scale_fill_discrete(
+    # labels = c("Anúncio","Música de Elevador", "Música Clássica")) +
+    scale_fill_manual(values = c("red", "green", "blue"),
+                      labels = c("Anúncio","M. de Elevador", "M. Clássica")) +
+    guides(color = "none")+
+    labs(x = "", y = "Tempo (min)", fill="",title = "b) Densidade") +
+    theme_bw()+ 
+    theme(legend.position = "bottom")
+
+p1+p2
+
 ```
 
-## Including Plots
+Na Tabela 1 há medidas resumo dos dados, em que é possívem identificar maior dispersão (variabilidade) no grupo que ouviu o Anúncio e que em média o grupo que ouviu Música Clássica permaneceu por um maior tempo de espera.
+```{r, echo=FALSE}
+dados %>%
+  mutate(
+    gravacao = as_factor(gravacao),
+    gravacao = lvls_revalue(
+      gravacao, c("Anúncio","Música de Elevador", "Música Clássica"))) %>%
+  group_by(gravacao) %>%
+  summarise(
+    round(min(tempo)), 
+    round(quantile(tempo, .25),3),
+    round(mean(tempo), 3),
+    median(tempo),
+    round(quantile(tempo, .75),3),
+    max(tempo),
+    round(sd(tempo), 2)) %>% 
+  kbl(
+    alingn = "c",
+    caption = "Tabela 1: Medidas Resumo",
+    col.names = c("Tipo de Áudio","Min","Q1","Media", "MD","Q3","Max", "SD")
+  ) %>% 
+  kable_styling(
+    latex_options = c("striped", "hover"), full_width = F)
+```
+## Análise Inferencial
 
-You can also embed plots, for example:
+Antes da aplicação do teste ANOVA é necessário constatar algumas premissas:
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+1. Independência dos dados amostrais;
+
+2. Normalidade de distribuição entre os dados;
+
+3. Igualdade da Variância Populacional (Homogeneidade).
+
+### Análise dos pré requisitos
+
+#### Verificação da Independência
+Para este ítem é assumido independência entre os dados do mesmo grupo e entre os dados dos grupos diferentes.
+
+#### Verificação da normalidade dos dados.
+O método utilizado para verificação da normalidade entre os dados dos grupos é o método de  *Shapiro-Wilk*, em que assume as seguintes hipóteses:
+
+* **H<sub>0</sub>**: Os dados são provenientes de uma Distribuição Normal
+
+* **H<sub>1</sub>**: Os dados **não são** provenientes de uma Distribuição Normal
+
+```{r, echo=FALSE}
+dados %>% 
+  mutate(gravacao = as_factor(gravacao),
+         gravacao = lvls_revalue(
+           gravacao, c("Anúncio","Música de Elevador", "Música Clássica"))) %>% 
+  rename(Gravação = gravacao, Tempo = tempo) %>% 
+  byf.shapiro(Tempo ~ Gravação,.)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Utilizando como base o *p-value* a um nível de significância de 5%, há indícios suficientes para aceitar a normalidade entre os dados, não sendo rejeitada assim a hipótese H<sub>0</sub>.
+
+#### Verificação da homogeneidade das Variâncias
+Para a realização da verificação da homogeneidade das Variâncias é realizado o teste de Levene, que consiste num teste com as seguintes hipóteses:
+
+* **H<sub>0</sub>**: As variâncias dos grupos são homogêneas.
+
+* **H<sub>1</sub>**: As variâncias dos grupos **não são** homogêneas.
+
+```{r, echo=FALSE}
+dados %>% 
+  mutate(gravacao = as_factor(gravacao)) %>% 
+  leveneTest(tempo ~ gravacao, ., center = mean)
+```
+
+Utilizando como base o *p-value* há um nível de significância de 5%, há indícios suficientes para aceitar a homogeneidade entre os grupos, não sendo rejeitada assim a hipótese H<sub>0</sub>.
+
+Após as análise das premissas há constatação da viabilidade da utilização do teste ANOVA nos dados coletados.
+
+### Teste ANOVA
+O teste de hipótese de Análise Variância assume as seguintes hipóteses:
+
+* **H<sub>0</sub>**: As médias dos grupos são todas iguais para um nível de significância de 5%.
+
+* **H<sub>1</sub>**: Pelo menos uma média dos grupos **não é** igual para um nível de significância de 5%.
+
+```{r, echo=FALSE}
+anova1 <- dados %>% 
+  mutate(
+    gravacao = as_factor(gravacao),
+    gravacao = lvls_revalue(
+      gravacao, c("Anúncio","Música de Elevador", "Música Clássica"))) %>% 
+  aov(tempo ~ gravacao,.)
+
+anova1 %>% summary
+```
+
+Conforme o nível de significãncia estabelecido, há indícios suficientes para rejeitar H<sub>0</sub> pois o *p-value* menor que 5%, ou seja, há diferença entre as médias dos grupos e para identificar entre quais grupos há essa diferença é realizada a análise de PostHoc pelo método de Bonferroni, sendo este o de maior precisão.
+
+### Análise de PostHoc.
+```{r, echo=FALSE}
+PostHocTest(anova1, method = "bonf")
+```
+
+Conclui-se que não existe diferênça entre os grupos que ouviram Música de Elevador e os que ouviram o Anúncio, nem entre os grupos que ouviram Música de Clássica e os que ouviram o Anúncio, mas existe diferença entre os grupos que ouviram Música de Clássica e os que ouviram Música de Elevador. 
+
+
+
+
+
