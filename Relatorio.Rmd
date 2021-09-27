@@ -2,7 +2,9 @@
 title: "Relatório Atividade Semana 7"
 author: "Fernando Bispo"
 date: "26/09/2021"
-output: 
+output:
+  pdf_document:
+    toc: no
   html_document:
     code_folding: hide
     html_document: null
@@ -98,7 +100,7 @@ dados %>%
     max(tempo),
     round(sd(tempo), 2)) %>% 
   kbl(
-    alingn = "c",
+    align = "c",
     caption = "Tabela 1: Medidas Resumo",
     col.names = c("Tipo de Áudio","Min","Q1","Media", "MD","Q3","Max", "SD")
   ) %>% 

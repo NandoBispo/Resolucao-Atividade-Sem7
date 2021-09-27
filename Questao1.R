@@ -1,22 +1,9 @@
-if(!require(tidyverse)) install.packages("tidyverse")
-library(tidyverse)
-if(!require(RVAideMemoire)) install.packages("RVAideMemoire") 
-library(RVAideMemoire) #Possibilita o teste de Shapiro-Wilk por grupo
-if(!require(car)) install.packages("car")   
-library(car)
-if(!require(psych)) install.packages("psych")
-library(psych) 
-if(!require(rstatix)) install.packages("rstatix") 
-library(rstatix)
-if(!require(DescTools)) install.packages("DescTools")
-library(DescTools)
-library(patchwork)
-library(knitr)
-library(kableExtra)
+if(!require(pacman)) install.packages("pacman")
+library(pacman)
 
-# library(DT)
-library(janitor)
-library(xtable)
+pacman::p_load(tidyverse, car, rstatix, ggpubr, 
+               RVAideMemoire, psych, DescTools, patchwork,
+               knitr, kableExtra, janitor, xtable)
 
 #Vídeo de ajuda:
 #https://www.youtube.com/watch?v=-khgg8lzbNY
@@ -42,6 +29,7 @@ dados %>%
     max(tempo),
     round(sd(tempo), 2)) %>% 
   kbl(
+    align = "c",
     caption = "Tabela 1: Medidas Resumo",
     col.names = c("Tipo de Áudio","Min","Q1","Media", "MD","Q3","Max", "SD")
   ) %>% 
@@ -50,7 +38,7 @@ dados %>%
 
 describeBy(dados$tempo, group = dados$gravacao)
 
-?kbl
+
 
 #Gráfico
 p1 <- 

@@ -5,6 +5,9 @@ pacman::p_load(tidyverse, car, rstatix, ggpubr,
                RVAideMemoire, psych, DescTools, patchwork,
                knitr, kableExtra, janitor, xtable)
 
+#Vídeo de ajuda:
+# https://www.youtube.com/watch?v=E2bYIb81q4A&list=PLOw62cBQ5j9VE9X4cCCfFMjW_hhEAJUhU&index=28
+
 # Importação dos dados
 dados2 <- read_delim("Dados/htwt.txt", delim = " ")
 
